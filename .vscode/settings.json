@@ -23,5 +23,13 @@
   "ruff.enable": true,
   "ruff.lint.run": "onSave",
   "ruff.format.enable": true,
-  "editor.defaultFormatter": "astral-sh.ruff",
+"editor.defaultFormatter": "astral-sh.ruff",
+"cursorpyright.analysis.autoSearchPaths": true,
+"cursorpyright.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none"
+},
+"cursorpyright.analysis.extraPaths": [
+    "${workspaceFolder}/src"
+],
+"cursorpyright.analysis.typeCheckingMode": "basic",
 }
