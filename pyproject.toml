@@ -4,4 +4,7 @@ version = "0.1.0"
 description = "Tool to log your container drops in World Of Warships."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pyside6>=6.10.2",
+    "sqlmodel>=0.0.33",
+]
