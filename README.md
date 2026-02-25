@@ -6,3 +6,13 @@ Tool to log your container drops in World Of Warships.
 
 - PySide6
 - SQLModel
+
+# Usage
+
+To start this application use
+
+´´´
+uv run main.py
+´´´
+
+in project folder
