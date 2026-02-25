@@ -19,7 +19,7 @@ class ContainerType(SQLModel, table=True):  # pyright: ignore[reportCallIssue, r
 
     id: str = Field(primary_key=True, description="z.B. 'more_coal'")
     name: str = Field(description="angezeigte Bezeichnung")
-    remium: int = Field(description="0 = normal, 1 = premium")
+    premium: int = Field(description="0 = normal, 1 = premium")
     items: int = Field(description="Anzahl Gegenstände pro Öffnung (1..n)")
     description: str = Field(description="Beschreibung/Notizen")
 
