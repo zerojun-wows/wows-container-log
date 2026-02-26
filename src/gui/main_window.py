@@ -43,56 +43,53 @@ class MainWindow(QMainWindow):
         )
         self.setGeometry(100, 100, 1024, 600)
 
-        #self._create_actions()
-        #self._create_toolbar()
-
-        #self._create_container_tab()
-        #self._create_drops_tab()
-        #self._create_central_widget()
+        # self._create_actions()
+        # self._create_toolbar()
+        # self._create_container_tab()
+        # self._create_drops_tab()
+        # self._create_central_widget()
 
         # ---- new code here -----
         self._create_main_tab_widget()
-
         self._create_toolbars()
 
     def _create_main_tab_widget(self) -> None:
-        
         self.main_tab_widget = QTabWidget()
-        self.main_tab_widget.addTab(self._create_main_drops_widget(),"Drops")
-        self.main_tab_widget.addTab(self._create_main_container_widget(),"Container")
+        self.main_tab_widget.addTab(self._create_main_drops_widget(), "Drops")
+        self.main_tab_widget.addTab(self._create_main_container_widget(), "Container")
         self.main_tab_widget.setTabPosition(QTabWidget.TabPosition.West)
-        
+
         self.setCentralWidget(self.main_tab_widget)
 
     # -----------------------------------------------------------------
-    # Code for drop logging part of application
+    # Creation code for drop logging part of application
     # -----------------------------------------------------------------
     def _create_main_drops_widget(self) -> QWidget:
         """Create the main tab widget used as the central content area.
 
         This method initializes the main tab widget, adds the primary drops tab,
         and assigns it as the central widget of the main window.
-        """        
+        """
         self.main_drops_widget = QWidget()
 
         layout = QVBoxLayout()
 
         placeholder_label = QLabel("Drops - not implemented yet")
         placeholder_label.setAlignment(Qt.AlignCenter)
-        
+
         layout.addWidget(placeholder_label)
         self.main_drops_widget.setLayout(layout)
 
         return self.main_drops_widget
-    
+
     # -----------------------------------------------------------------
-    # Code for container definition part of application
+    # Creation code for container definition part of application
     # -----------------------------------------------------------------
     def _create_main_container_widget(self) -> QSplitter:
         self.main_container_widget = QSplitter(Qt.Orientation.Horizontal, self)
 
         self.main_container_widget.addWidget(self._create_search_panel_widget())
-        self.main_container_widget.addWidget(QWidget())
+        self.main_container_widget.addWidget(self._create_container_panel_tabwidget())
 
         return self.main_container_widget
 
@@ -115,17 +112,150 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.container_list_view)
 
         search_panel_widget.setLayout(layout)
-        
+
         return search_panel_widget
 
     def _create_container_panel_tabwidget(self) -> QTabWidget:
         self.container_panel_tabwidget = QTabWidget()
 
-        # Todo Add subTabs 
+        self.container_panel_tabwidget.addTab(
+            self._create_subtab_containerdetails_widget(), "Containerdetails"
+        )
+        self.container_panel_tabwidget.addTab(
+            self._create_subtab_slots_and_groups_widget(),
+            "Belohnungsplätze und Gruppen",
+        )
+        self.container_panel_tabwidget.addTab(QWidget(), "Belohnungen und Drop-Regeln")
 
         return self.container_panel_tabwidget
-    
-    
+
+    def _create_subtab_containerdetails_widget(self) -> QWidget:
+        self.subtab_containerdetails_widget = QWidget()
+
+        layout = QVBoxLayout()
+        layout.addLayout(self._create_subtab_containerdetails_formlayout())
+
+        container_description_label = QLabel("Beschreibung / Notizen:")
+        self.container_description_plainedit = QPlainTextEdit()
+        self.container_description_plainedit.setPlaceholderText(
+            "Z.B. Drop-Logik, Event, Saison ..."
+        )
+        layout.addWidget(container_description_label)
+        layout.addWidget(self.container_description_plainedit)
+
+        layout.addLayout(self._create_subtab_containerdetails_buttonlayout())
+
+        self.subtab_containerdetails_widget.setLayout(layout)
+
+        return self.subtab_containerdetails_widget
+
+    def _create_subtab_containerdetails_formlayout(self) -> QFormLayout:
+        layout = QFormLayout()
+
+        self.container_id_edit: QLineEdit = QLineEdit()
+        self.container_name_edit = QLineEdit()
+        self.container_premium_checkbox = QCheckBox("Premium-Container")
+        self.container_slots_spin = QSpinBox()
+        self.container_slots_spin.setMinimum(1)
+        self.container_slots_spin.setMaximum(5)
+
+        layout.addRow("Technische ID:", self.container_id_edit)
+        layout.addRow("Anzeigename:", self.container_name_edit)
+        layout.addRow("Premium:", self.container_premium_checkbox)
+        layout.addRow("Belohnungen:", self.container_slots_spin)
+
+        return layout
+
+    def _create_subtab_containerdetails_buttonlayout(self) -> QHBoxLayout:
+        layout = QHBoxLayout()
+
+        self.container_pushbutton = QPushButton(
+            "Belohnungen generieren / Daten aktualisieren"
+        )
+        layout.addStretch(1)
+        layout.addWidget(self.container_pushbutton)
+        layout.addStretch(1)
+
+        return layout
+
+    def _create_subtab_slots_and_groups_widget(self) -> QWidget:
+        self.subtab_slots_and_groups_widget = QWidget()
+
+        layout = QHBoxLayout()
+        layout.addLayout(self._create_slot_display_layout(), 1)
+        layout.addLayout(self._create_group_editor_layout(), 1)
+
+        self.subtab_slots_and_groups_widget.setLayout(layout)
+
+        return self.subtab_slots_and_groups_widget
+
+    def _create_slot_display_layout(self) -> QVBoxLayout:
+        layout = QVBoxLayout()
+
+        slots_label = QLabel("Belohnungen")
+        layout.addWidget(slots_label)
+
+        self.slots_table_view = QTableView()
+        layout.addWidget(self.slots_table_view)
+
+        sublayout_buttons = QHBoxLayout()
+
+        new_group_button = QPushButton("Neue Gruppe")
+        sublayout_buttons.addWidget(new_group_button)
+
+        assign_group_button = QPushButton("Gruppe zuweisen")
+        sublayout_buttons.addWidget(assign_group_button)
+
+        layout.addLayout(sublayout_buttons)
+        return layout
+
+    def _create_group_editor_layout(self) -> QVBoxLayout:
+        layout = QVBoxLayout()
+
+        group_editor_label = QLabel("Gruppeneditor")
+        layout.addWidget(group_editor_label)
+
+        layout.addLayout(self._create_group_editor_form_sublayout())
+
+        self.group_structure_tree = QTreeWidget()
+        self.group_structure_tree.setHeaderLabels(["Gruppenstruktur"])
+
+        layout.addWidget(self.group_structure_tree)
+
+        layout.addLayout(self._create_group_editor_button_sublayout())
+
+        hint_label = QLabel(
+            "Hinweis:\nÄnderungen an Gruppen wirken auf alle zugeordneten Slots."
+        )
+        hint_label.setWordWrap(True)
+        layout.addWidget(hint_label)
+
+        return layout
+
+    def _create_group_editor_form_sublayout(self) -> QFormLayout:
+        sublayout = QFormLayout()
+
+        self.active_group_combo = QComboBox()
+        self.group_id_edit = QLineEdit()
+        self.group_name_edit = QLineEdit()
+
+        sublayout.addRow("Aktive Gruppe:", self.active_group_combo)
+        sublayout.addRow("Gruppen-ID:", self.group_id_edit)
+        sublayout.addRow("Name:", self.group_name_edit)
+
+        return sublayout
+
+    def _create_group_editor_button_sublayout(self) -> QHBoxLayout:
+        sublayout = QHBoxLayout()
+
+        self.add_child_group_button = QPushButton("Untergruppe hinzufügen")
+        sublayout.addWidget(self.add_child_group_button)
+
+        self.remove_child_group_button = QPushButton("Untergruppe entfernen")
+        sublayout.addWidget(self.remove_child_group_button)
+
+        return sublayout
+
     # -----------------------------------------------------------------
     # Code for Toolbars
     # -----------------------------------------------------------------
@@ -138,23 +268,14 @@ class MainWindow(QMainWindow):
         self.toolbar = self.addToolBar("Application")
         self.toolbar.addAction(self.exit_application_action)
 
-
-
     def _create_toolbar_actions(self) -> None:
         self.new_container_action = QAction("Neuer Container", self)
         # self.new_container_action.triggered.connect(self.on_new_container)
         self.exit_application_action = QAction("Programm beenden", self)
 
-
     # -----------------------------------------------------------------
     # ---- Old Code needs refactor due to bad naming of variables -----
-    # -----------------------------------------------------------------#         
-    def _create_actions(self):
-        self.action_new_container = QAction("Neuer Container", self)
-
-        self.action_new_container.triggered.connect(self.on_new_container)
-
-
+    # -----------------------------------------------------------------#
     def _create_central_widget(self):
         """Create the central widget of the main window."""
         self.central_widget = QTabWidget()
@@ -242,7 +363,9 @@ class MainWindow(QMainWindow):
 
         lbl_desc = QLabel("Beschreibung / Notizen:")
         self.container_description_edit = QPlainTextEdit()
-        self.container_description_edit.setPlaceholderText("Z.B. Drop-Logik, Event, Saison ...")
+        self.container_description_edit.setPlaceholderText(
+            "Z.B. Drop-Logik, Event, Saison ..."
+        )
 
         layout.addWidget(lbl_desc)
         layout.addWidget(self.container_description_edit, 1)
@@ -326,7 +449,7 @@ class MainWindow(QMainWindow):
         right_layout.addLayout(btn_row2)
 
         lbl_hint = QLabel(
-            "Hinweis: Änderungen an Gruppen wirken auf alle zugeordneten Slots."
+            "Hinweis:<br> Änderungen an Gruppen wirken auf alle zugeordneten Slots."
         )
         lbl_hint.setWordWrap(True)
         right_layout.addWidget(lbl_hint)
@@ -393,9 +516,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(right, 1)
 
         return widget
-    def _create_toolbar(self):
-        self.toolbar = self.addToolBar("Container")
-        self.toolbar.addAction(self.action_new_container)
 
     def reload_container_list(self, select_id: str | None = None) -> None:
         containers = container_repo.list_containers()
@@ -404,7 +524,9 @@ class MainWindow(QMainWindow):
         # selected_row = -1
 
         for row, c in enumerate(containers):
-            item = QStandardItem(f"{c.name} ({c.items} Gegenst{"ände" if c.items != 1 else "and"}){" - Premiumcontainer" if c.premium == 1 else ""}")
+            item = QStandardItem(
+                f"{c.name} ({c.items} Gegenst{'ände' if c.items != 1 else 'and'}){' - Premiumcontainer' if c.premium == 1 else ''}"
+            )
             # ID für spätere Auswahl merken
             item.setData(c.id)
             self.container_model.appendRow(item)
@@ -415,7 +537,7 @@ class MainWindow(QMainWindow):
         # if selected_row >= 0:
         #     index = self.container_model.index(selected_row, 0)
         #    self.container_list_view.setCurrentIndex(index)
- 
+
     def on_new_container(self):
         """Reset the container form to create a new container entry.
 
@@ -436,4 +558,3 @@ class MainWindow(QMainWindow):
         self.container_id_edit.setFocus()
 
         self.central_widget.setCurrentWidget(self.container_tab)
-
