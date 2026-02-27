@@ -125,10 +125,14 @@ class MainWindow(QMainWindow):
             self._create_subtab_slots_and_groups_widget(),
             "Belohnungsplätze und Gruppen",
         )
-        self.container_panel_tabwidget.addTab(QWidget(), "Belohnungen und Drop-Regeln")
+        self.container_panel_tabwidget.addTab(
+            self._create_subtab_items_and_entries_widget(),
+            "Belohnungen und Drop-Regeln"
+        )
 
         return self.container_panel_tabwidget
-
+    
+    # First sub tab creation
     def _create_subtab_containerdetails_widget(self) -> QWidget:
         self.subtab_containerdetails_widget = QWidget()
 
@@ -178,6 +182,7 @@ class MainWindow(QMainWindow):
 
         return layout
 
+    # Second sub tab creation
     def _create_subtab_slots_and_groups_widget(self) -> QWidget:
         self.subtab_slots_and_groups_widget = QWidget()
 
@@ -255,6 +260,72 @@ class MainWindow(QMainWindow):
         sublayout.addWidget(self.remove_child_group_button)
 
         return sublayout
+    
+    # third sub tab creation
+    def _create_subtab_items_and_entries_widget(self) -> QWidget:
+        self.subtab_items_and_entries_widget = QWidget()
+        
+        layout = QHBoxLayout()
+        layout.addLayout(self._create_reward_item_editor_layout())
+        layout.addLayout(self._create_reward_entry_editor_layout())
+
+        self.subtab_items_and_entries_widget.setLayout(layout)
+
+        return self.subtab_items_and_entries_widget
+
+    def _create_reward_item_editor_layout(self) -> QVBoxLayout:
+        layout = QVBoxLayout()
+
+        reward_item_label = QLabel("Items (RewardItem)")
+        layout.addWidget(reward_item_label)
+
+        reward_items_table_view = QTableView()
+        layout.addWidget(reward_items_table_view)
+
+        sublayout = QHBoxLayout()
+
+        new_reward_item_button = QPushButton("Neues Item")
+        sublayout.addWidget(new_reward_item_button)
+
+        duplicate_reward_item_button = QPushButton("Item duplizieren")
+        sublayout.addWidget(duplicate_reward_item_button)
+
+        delete_reward_item_button = QPushButton("Item löschen")
+        sublayout.addWidget(delete_reward_item_button)
+
+        sublayout.addStretch(1)
+
+        layout.addLayout(sublayout)
+
+        return layout
+    
+    def _create_reward_entry_editor_layout(self) -> QVBoxLayout:
+        layout = QVBoxLayout()
+
+        reward_entry_label = QLabel("Einträge (RewardEntry)")
+        layout.addWidget(reward_entry_label)
+
+        reward_entry_group_combo = QComboBox()
+        reward_entry_group_combo.setPlaceholderText("Gruppe wählen ...")
+        layout.addWidget(reward_entry_group_combo)
+
+        reward_entry_table = QTableView()
+        layout.addWidget(reward_entry_table, 1)
+
+        sublayout = QHBoxLayout()
+
+        new_reward_entry_button = QPushButton("Neuer Eintrag")
+        sublayout.addWidget(new_reward_entry_button)
+
+        delete_reward_entry_button = QPushButton("Eintrag löschen")
+        sublayout.addWidget(delete_reward_entry_button)
+
+        layout.addLayout(sublayout)
+
+        hint_label = QLabel("Hinweis:\nSummen der Wahrscheinlichkeiten werden überprüft.")
+        layout.addWidget(hint_label)
+        
+        return layout
 
     # -----------------------------------------------------------------
     # Code for Toolbars
