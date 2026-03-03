@@ -9,12 +9,12 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFormLayout,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QListView,
     QMainWindow,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
@@ -22,11 +22,10 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QTableView,
     QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
-
+from src.models.container import ContainerType
 from src.storage import container_repo
 from versioning import get_version
 
@@ -43,15 +42,10 @@ class MainWindow(QMainWindow):
         )
         self.setGeometry(100, 100, 1024, 600)
 
-        # self._create_actions()
-        # self._create_toolbar()
-        # self._create_container_tab()
-        # self._create_drops_tab()
-        # self._create_central_widget()
-
-        # ---- new code here -----
         self._create_main_tab_widget()
         self._create_toolbars()
+
+        self.reload_container_list_view()
 
     def _create_main_tab_widget(self) -> None:
         self.main_tab_widget = QTabWidget()
@@ -94,6 +88,7 @@ class MainWindow(QMainWindow):
         return self.main_container_widget
 
     def _create_search_panel_widget(self) -> QWidget:
+        # sourcery skip: class-extract-method
         search_panel_widget = QWidget()
         layout = QVBoxLayout()
 
@@ -106,6 +101,7 @@ class MainWindow(QMainWindow):
 
         self.container_list_view = QListView()
         self.container_list_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.container_list_view.clicked.connect(self.on_container_list_view_clicked)
         self.container_list_view_model = QStandardItemModel(self)
         self.container_list_view_model.appendRow(QStandardItem("Testzeile"))
         self.container_list_view.setModel(self.container_list_view_model)
@@ -127,11 +123,11 @@ class MainWindow(QMainWindow):
         )
         self.container_panel_tabwidget.addTab(
             self._create_subtab_items_and_entries_widget(),
-            "Belohnungen und Drop-Regeln"
+            "Belohnungen und Drop-Regeln",
         )
 
         return self.container_panel_tabwidget
-    
+
     # First sub tab creation
     def _create_subtab_containerdetails_widget(self) -> QWidget:
         self.subtab_containerdetails_widget = QWidget()
@@ -173,11 +169,14 @@ class MainWindow(QMainWindow):
     def _create_subtab_containerdetails_buttonlayout(self) -> QHBoxLayout:
         layout = QHBoxLayout()
 
-        self.container_pushbutton = QPushButton(
+        self.container_save_pushbutton = QPushButton(
             "Belohnungen generieren / Daten aktualisieren"
         )
+        self.container_save_pushbutton.clicked.connect(
+            self.on_container_save_pushbutton_clicked
+        )
         layout.addStretch(1)
-        layout.addWidget(self.container_pushbutton)
+        layout.addWidget(self.container_save_pushbutton)
         layout.addStretch(1)
 
         return layout
@@ -260,11 +259,11 @@ class MainWindow(QMainWindow):
         sublayout.addWidget(self.remove_child_group_button)
 
         return sublayout
-    
+
     # third sub tab creation
     def _create_subtab_items_and_entries_widget(self) -> QWidget:
         self.subtab_items_and_entries_widget = QWidget()
-        
+
         layout = QHBoxLayout()
         layout.addLayout(self._create_reward_item_editor_layout())
         layout.addLayout(self._create_reward_entry_editor_layout())
@@ -298,7 +297,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(sublayout)
 
         return layout
-    
+
     def _create_reward_entry_editor_layout(self) -> QVBoxLayout:
         layout = QVBoxLayout()
 
@@ -322,9 +321,11 @@ class MainWindow(QMainWindow):
 
         layout.addLayout(sublayout)
 
-        hint_label = QLabel("Hinweis:\nSummen der Wahrscheinlichkeiten werden überprüft.")
+        hint_label = QLabel(
+            "Hinweis:\nSummen der Wahrscheinlichkeiten werden überprüft."
+        )
         layout.addWidget(hint_label)
-        
+
         return layout
 
     # -----------------------------------------------------------------
@@ -341,291 +342,163 @@ class MainWindow(QMainWindow):
 
     def _create_toolbar_actions(self) -> None:
         self.new_container_action = QAction("Neuer Container", self)
-        # self.new_container_action.triggered.connect(self.on_new_container)
+        self.new_container_action.triggered.connect(
+            self.on_new_container_tool_button_triggered
+        )
+
         self.exit_application_action = QAction("Programm beenden", self)
+        self.exit_application_action.triggered.connect(self.close)
 
     # -----------------------------------------------------------------
-    # ---- Old Code needs refactor due to bad naming of variables -----
-    # -----------------------------------------------------------------#
-    def _create_central_widget(self):
-        """Create the central widget of the main window."""
-        self.central_widget = QTabWidget()
-        self.central_widget.addTab(self.drops_tab, "Drops")
-        self.central_widget.addTab(self.container_tab, "Containers")
-        self.central_widget.setTabPosition(QTabWidget.TabPosition.West)
-        self.setCentralWidget(self.central_widget)
-
-    def _create_container_tab(self):
-        """Create the container tab of the main window."""
-        self.container_tab = QSplitter(Qt.Orientation.Horizontal, self)
-
-        left_panel = self._create_left_panel()
-        right_panel = self._create_right_panel()
-
-        self.container_tab.addWidget(left_panel)
-        self.container_tab.addWidget(right_panel)
-
-        # self.container_tab.setStretchFactor(0, 1)
-        # self.container_tab.setStretchFactor(1, 3)
-
-    def _create_drops_tab(self):
-        """Create the drops tab of the main window."""
-        self.drops_tab = QWidget()
-        drops_layout = QVBoxLayout()
-        drops_layout.addWidget(QLabel("Drops - not implemented yet"))
-        self.drops_tab.setLayout(drops_layout)
-
-    def _create_left_panel(self):
-        """Create the left panel of the container tab."""
-        left_panel = QWidget(self)
-        left_layout = QVBoxLayout(left_panel)
-
-        label_title = QLabel("Containers")
-        left_layout.addWidget(label_title)
-
-        search_line_edit = QLineEdit()
-        search_line_edit.setPlaceholderText("Suche...")
-        left_layout.addWidget(search_line_edit)
-
-        self.container_list = QListView()
-        self.container_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.container_model = QStandardItemModel(self)
-        self.container_list.setModel(self.container_model)
-        self.reload_container_list()
-
-        left_layout.addWidget(self.container_list)
-
-        left_panel.setLayout(left_layout)
-        return left_panel
-
-    def _create_right_panel(self):
-        """Create the right panel of the container tab."""
-        right_panel = QTabWidget()
-
-        right_panel.addTab(self._create_tab_containerdetails(), "Containerdetails")
-        right_panel.addTab(
-            self._create_tab_slots_and_groups(), "Belohnungsplätze und Gruppen"
-        )
-        right_panel.addTab(
-            self._create_tab_items_and_entries(), "Belohnungen und Drop-Regeln"
-        )
-        # ToDo add preview tab later
-
-        return right_panel
-
-    def _create_tab_containerdetails(self):
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-
-        form = QFormLayout()
-        self.container_id_edit: QLineEdit = QLineEdit()
-        self.container_name_edit = QLineEdit()
-        self.container_premium_checkbox = QCheckBox("Premium-Container")
-        self.container_slots_spin = QSpinBox()
-        self.container_slots_spin.setMinimum(1)
-        self.container_slots_spin.setMaximum(5)
-
-        form.addRow("Technische ID:", self.container_id_edit)
-        form.addRow("Anzeigename:", self.container_name_edit)
-        form.addRow("Premium:", self.container_premium_checkbox)
-        form.addRow("Belohnungen:", self.container_slots_spin)
-
-        layout.addLayout(form)
-
-        lbl_desc = QLabel("Beschreibung / Notizen:")
-        self.container_description_edit = QPlainTextEdit()
-        self.container_description_edit.setPlaceholderText(
-            "Z.B. Drop-Logik, Event, Saison ..."
-        )
-
-        layout.addWidget(lbl_desc)
-        layout.addWidget(self.container_description_edit, 1)
-
-        btn_slots = QPushButton("Belohnungen generieren / Daten aktualisieren")
-
-        hl = QHBoxLayout()
-        hl.addStretch(1)
-        hl.addWidget(btn_slots)
-        hl.addStretch(1)
-
-        layout.addLayout(hl)
-
-        return widget
-
-    def _create_tab_slots_and_groups(self) -> QWidget:
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-
-        left = QWidget()
-        left_layout = QVBoxLayout(left)
-
-        lbl_slots = QLabel("Slots dieses Containers")
-        lbl_slots.setStyleSheet("font-weight: bold;")
-        left_layout.addWidget(lbl_slots)
-
-        table_slots = QTableView()
-        left_layout.addWidget(table_slots, 1)
-
-        btn_row = QHBoxLayout()
-        btn_new_group = QPushButton("Neue Gruppe")
-        btn_assign_group = QPushButton("Gruppe zuweisen")
-        btn_row.addWidget(btn_new_group)
-        btn_row.addWidget(btn_assign_group)
-        btn_row.addStretch(1)
-        left_layout.addLayout(btn_row)
-
-        right = QWidget()
-        right_layout = QVBoxLayout(right)
-
-        lbl_group_editor = QLabel("Gruppen-Editor")
-        lbl_group_editor.setStyleSheet("font-weight: bold;")
-        right_layout.addWidget(lbl_group_editor)
-
-        form = QGridLayout()
-        lbl_active_group = QLabel("Aktive Gruppe:")
-        cb_group = QComboBox()
-        form.addWidget(lbl_active_group, 0, 0)
-        form.addWidget(cb_group, 0, 1)
-
-        lbl_gid = QLabel("Gruppen-ID:")
-        edit_gid = QLineEdit()
-        lbl_gname = QLabel("Name:")
-        edit_gname = QLineEdit()
-
-        form.addWidget(lbl_gid, 1, 0)
-        form.addWidget(edit_gid, 1, 1)
-        form.addWidget(lbl_gname, 2, 0)
-        form.addWidget(edit_gname, 2, 1)
-
-        right_layout.addLayout(form)
-
-        tree = QTreeWidget()
-        tree.setHeaderLabels(["Gruppenstruktur"])
-        # Beispielstruktur
-        root_item = QTreeWidgetItem(["group_more_coal_slot1"])
-        child_std = QTreeWidgetItem(["group_more_coal_std"])
-        child_jp = QTreeWidgetItem(["group_more_coal_jackpot"])
-        root_item.addChildren([child_std, child_jp])
-        tree.addTopLevelItem(root_item)
-        tree.expandAll()
-
-        right_layout.addWidget(tree, 1)
-
-        btn_row2 = QHBoxLayout()
-        btn_add_sub = QPushButton("Untergruppe hinzufügen")
-        btn_del_sub = QPushButton("Untergruppe entfernen")
-        btn_row2.addWidget(btn_add_sub)
-        btn_row2.addWidget(btn_del_sub)
-        btn_row2.addStretch(1)
-        right_layout.addLayout(btn_row2)
-
-        lbl_hint = QLabel(
-            "Hinweis:<br> Änderungen an Gruppen wirken auf alle zugeordneten Slots."
-        )
-        lbl_hint.setWordWrap(True)
-        right_layout.addWidget(lbl_hint)
-
-        layout.addWidget(left, 1)
-        layout.addWidget(right, 1)
-
-        return widget
-
-    def _create_tab_items_and_entries(self) -> QWidget:
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-
-        # Links: Items
-        left = QWidget()
-        left_layout = QVBoxLayout(left)
-
-        lbl_items = QLabel("Items (RewardItem)")
-        lbl_items.setStyleSheet("font-weight: bold;")
-        left_layout.addWidget(lbl_items)
-
-        table_items = QTableView()
-        left_layout.addWidget(table_items, 1)
-
-        btn_row = QHBoxLayout()
-        btn_new_item = QPushButton("Neues Item")
-        btn_dup_item = QPushButton("Item duplizieren")
-        btn_del_item = QPushButton("Item löschen")
-        btn_row.addWidget(btn_new_item)
-        btn_row.addWidget(btn_dup_item)
-        btn_row.addWidget(btn_del_item)
-        btn_row.addStretch(1)
-        left_layout.addLayout(btn_row)
-
-        # Rechts: Einträge
-        right = QWidget()
-        right_layout = QVBoxLayout(right)
-
-        lbl_entries = QLabel("Einträge (RewardEntry)")
-        lbl_entries.setStyleSheet("font-weight: bold;")
-        right_layout.addWidget(lbl_entries)
-
-        cb_group = QComboBox()
-        cb_group.setPlaceholderText("Gruppe wählen ...")
-        right_layout.addWidget(cb_group)
-
-        table_entries = QTableView()
-        right_layout.addWidget(table_entries, 1)
-
-        btn_row2 = QHBoxLayout()
-        btn_new_entry = QPushButton("Neuer Eintrag")
-        btn_del_entry = QPushButton("Eintrag löschen")
-        btn_row2.addWidget(btn_new_entry)
-        btn_row2.addWidget(btn_del_entry)
-        btn_row2.addStretch(1)
-        right_layout.addLayout(btn_row2)
-
-        lbl_prob = QLabel(
-            "Hinweis: \nSummen der Wahrscheinlichkeiten werden überprüft."
-        )
-        right_layout.addWidget(lbl_prob)
-
-        layout.addWidget(left, 1)
-        layout.addWidget(right, 1)
-
-        return widget
-
-    def reload_container_list(self, select_id: str | None = None) -> None:
-        containers = container_repo.list_containers()
-
-        self.container_model.clear()
-        # selected_row = -1
-
-        for row, c in enumerate(containers):
-            item = QStandardItem(
-                f"{c.name} ({c.items} Gegenst{'ände' if c.items != 1 else 'and'}){' - Premiumcontainer' if c.premium == 1 else ''}"
-            )
-            # ID für spätere Auswahl merken
-            item.setData(c.id)
-            self.container_model.appendRow(item)
-
-            if select_id is not None and c.id == select_id:
-                selected_row = row
-
-        # if selected_row >= 0:
-        #     index = self.container_model.index(selected_row, 0)
-        #    self.container_list_view.setCurrentIndex(index)
-
-    def on_new_container(self):
-        """Reset the container form to create a new container entry.
-
-        This method clears all container-related input fields, resets state, and
-        switches the main view to the container tab so the user can enter data
-        for a new container.
-        """
-
+    # Slots of this application
+    # -----------------------------------------------------------------
+    def on_new_container_tool_button_triggered(self) -> None:
         self.current_container_id = None
 
         self.container_id_edit.setText("")
         self.container_name_edit.setText("")
         self.container_premium_checkbox.setChecked(False)
         self.container_slots_spin.setValue(1)
-        self.container_description_edit.setPlainText("")
+        self.container_description_plainedit.setPlainText("")
 
         self.container_id_edit.setReadOnly(False)
         self.container_id_edit.setFocus()
 
-        self.central_widget.setCurrentWidget(self.container_tab)
+        self.main_tab_widget.setCurrentWidget(self.main_container_widget)
+        self.container_panel_tabwidget.setCurrentWidget(
+            self.subtab_containerdetails_widget
+        )
+
+    def on_container_save_pushbutton_clicked(self) -> None:
+        # form validation
+        if not self._validate_container_form():
+            return
+
+        container_id = self.container_id_edit.text().strip()
+        container_name = self.container_name_edit.text().strip()
+        container_premium = self.container_premium_checkbox.isChecked()
+        container_items = self.container_slots_spin.value()
+        container_description = self.container_description_plainedit.toPlainText()
+
+        if self.current_container_id is None:
+            # neuer container
+            container = ContainerType(
+                id=container_id,
+                name=container_name,
+                premium=container_premium,
+                items=container_items,
+                description=container_description,
+            )
+        else:
+            container = container_repo.get_container_by_id(self.current_container_id)
+
+            if container is None:
+                container = container = ContainerType(
+                    id=container_id,
+                    name=container_name,
+                    premium=container_premium,
+                    items=container_items,
+                    description=container_description,
+                )
+            else:
+                container.name = container_name
+                container.premium = container_premium
+                container.items = container_items
+                container.description = container_description
+
+        saved = container_repo.save_container(container)
+
+        self.current_container_id = saved.id
+        self.container_id_edit.setReadOnly(True)
+
+        self.reload_container_list_view(select_id=saved.id)
+
+    def on_container_list_view_clicked(self, index) -> None:
+        container_id = index.data(Qt.UserRole)
+        self.load_container_into_form(container_id)
+
+    # -----------------------------------------------------------------
+    # Form validation routines
+    # -----------------------------------------------------------------
+    def _validate_container_form(self) -> bool:
+        if self.container_id_edit.text() == "":
+            QMessageBox.critical(
+                self,
+                "Keine Container Id",
+                "Jeder Container muss eine eindeutige Id besitzen!",
+            )
+            self.container_id_edit.setFocus()
+            return False
+
+        if self.container_name_edit.text() == "":
+            QMessageBox.critical(
+                self,
+                "Kein Container Name",
+                "Jeder Container muss einen Namen bekommen!",
+            )
+            self.container_name_edit.setFocus()
+            return False
+
+        # eindeutige container id
+        container = container_repo.get_container_by_id(
+            self.container_id_edit.text().strip()
+        )
+        if container is not None and self.current_container_id is None:
+            QMessageBox.critical(
+                self,
+                "Container Id bereits vorhanden",
+                "Jeder Container muss eine eindeutige Id besitzen!",
+            )
+            self.container_id_edit.setFocus()
+            return False
+
+        return True
+
+    # -----------------------------------------------------------------
+    # Routines to fill widgets with data
+    # -----------------------------------------------------------------
+    def reload_container_list_view(self, select_id: str | None = None) -> None:
+        containers = container_repo.list_containers()
+
+        self.container_list_view_model.clear()
+        selected_row = -1
+
+        for row, entry in enumerate(containers):
+            item = QStandardItem(
+                self._format_container_list_entry(
+                    entry.name, entry.items, entry.premium
+                )
+            )
+            item.setData(entry.id, Qt.UserRole)
+            print(f"EntryId:{entry.id}")
+            self.container_list_view_model.appendRow(item)
+
+            if select_id is not None and entry.id == select_id:
+                selected_row = row
+
+        if selected_row >= 0:
+            index = self.container_list_view_model.index(selected_row, 0)
+            self.container_list_view.setCurrentIndex(index)
+
+    def _format_container_list_entry(self, name: str, items: int, premium: int) -> str:
+        item_label = "Gegenstände" if items != 1 else "Gegenstand"
+        premium_suffix = " - Premiumcontainer" if premium == 1 else ""
+        return f"{name} ({items} {item_label}){premium_suffix}"
+
+    def load_container_into_form(self, container_id: str) -> None:
+        container = container_repo.get_container_by_id(container_id)
+        if container is None:
+            return
+
+        self.current_container_id = container.id
+
+        self.container_id_edit.setText(container.id)
+        self.container_id_edit.setReadOnly(True)
+        self.container_name_edit.setText(container.name)
+        self.container_premium_checkbox.setChecked(bool(container.premium))
+        self.container_slots_spin.setValue(container.items)
+        self.container_description_plainedit.setPlainText(container.description)
+
+    # -----------------------------------------------------------------
+    # Old code and other stuff that will be removed later
+    # -----------------------------------------------------------------
