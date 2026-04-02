@@ -1,0 +1,26 @@
+[project]
+name = "wows-container-log"
+version = "0.1.0"
+description = "Tool to log your container drops in World Of Warships."
+readme = "README.md"
+authors = [
+    { name = "zerojun", email = "zerojun@gmx.net" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pyside6>=6.11.0",
+    "sqlmodel>=0.0.37",
+]
+
+[project.scripts]
+wows-container-log = "wows_container_log:main"
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "pep440"
+version_provider = "uv"
