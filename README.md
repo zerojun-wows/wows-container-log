@@ -4,7 +4,7 @@ Tool to log your container drops in World Of Warships.
 
 ## Dependencies
 
-- Python 3.1x
+- Python 3.13
 - PySide6
 - SQLModel
 
