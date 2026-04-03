@@ -36,11 +36,7 @@ rule_settings:
   - refactoring
   - suggestion
   - comment
-<<<<<<< HEAD
   python_version: '3.13' # A string specifying the lowest Python version your project supports. Sourcery will not suggest refactorings requiring a higher Python version.
-=======
-  python_version: '3.9' # A string specifying the lowest Python version your project supports. Sourcery will not suggest refactorings requiring a higher Python version.
->>>>>>> parent of 892de6f (overhaul project)
 
 # rules:  # A list of custom rules Sourcery will include in its analysis.
 # - id: no-print-statements
