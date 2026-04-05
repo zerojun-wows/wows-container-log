@@ -1,6 +1,6 @@
 [project]
 name = "wows-container-log"
-version = "0.4.0"
+version = "0.5.0"
 description = "Tool to log your container drops in World Of Warships."
 readme = "README.md"
 authors = [
