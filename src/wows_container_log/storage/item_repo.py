@@ -17,6 +17,15 @@ def create_item_by_reward_item(item: RewardItem) -> RewardItem:
         return item
 
 
+def delete_item_by_id(item_id: str) -> None:
+    with get_container_session() as session:
+        existing = session.get(RewardItem, item_id)
+        if existing is None:
+            return
+        session.delete(existing)
+        session.commit()
+
+
 def get_all_items() -> List[RewardItem]:
     with get_container_session() as session:
         statement = select(RewardItem).order_by(RewardItem.name)
