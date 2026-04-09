@@ -1,10 +1,9 @@
-from turtle import right
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QHeaderView,
     QMessageBox,
+    QTreeView,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -21,7 +20,7 @@ from wows_container_log.storage import item_repo
 
 class ItemEditorPanel(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
-        
+
         super().__init__(parent)
 
         main_layout = QVBoxLayout(self)
@@ -31,10 +30,7 @@ class ItemEditorPanel(QWidget):
 
         splitter.addWidget(self._create_reward_items_left_widget(splitter))
 
-        # ----- Rechter Bereich: Placeholder für Entries -----
-        right_placeholder = QLabel("Drop-Entries (später)")
-        right_placeholder.setAlignment(Qt.AlignCenter)  # pyright: ignore[reportAttributeAccessIssue]
-        splitter.addWidget(right_placeholder)
+        splitter.addWidget(self._create_reward_entries_right_side(splitter))
 
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 2)
@@ -53,7 +49,7 @@ class ItemEditorPanel(QWidget):
     # -----------------------------------------------------------------
 
     def _create_reward_items_left_widget(self, splitter: QSplitter) -> QWidget:
-        
+
         left_widget = QWidget(splitter)
         left_layout = QVBoxLayout(left_widget)
 
@@ -72,7 +68,7 @@ class ItemEditorPanel(QWidget):
         self.reward_items_table_view_model = QStandardItemModel(self)
 
         self.reward_items_table_view_model.setHorizontalHeaderLabels(
-            ["ID", "Name", "Menge", "Metadaten", "Nur einmal droppbar"]
+            ["Name", "Menge", "Metadaten", "Nur einmal droppbar", "ID"]
         )
         self.reward_items_table_view.setModel(self.reward_items_table_view_model)
         self.reward_items_table_view.setSelectionBehavior(QTableView.SelectRows)  # pyright: ignore[reportAttributeAccessIssue]
@@ -125,8 +121,16 @@ class ItemEditorPanel(QWidget):
         right_widget = QWidget(splitter)
         right_layout = QVBoxLayout(right_widget)
 
-        title_label = QLabel("xxx")
+        title_label = QLabel("Item-Verwendungen")
         right_layout.addWidget(title_label)
+
+        self.reward_item_usages_tree_view = QTreeView(right_widget)
+        self.item_usages_model = QStandardItemModel(self)
+        self.item_usages_model.setHorizontalHeaderLabels(["Ort", "Detail"])
+        self.reward_item_usages_tree_view.setModel(self.item_usages_model)
+        self.reward_item_usages_tree_view.setHeaderHidden(False)
+
+        right_layout.addWidget(self.reward_item_usages_tree_view)
 
         return right_widget
 
@@ -135,10 +139,10 @@ class ItemEditorPanel(QWidget):
     # -----------------------------------------------------------------
 
     def reload_reward_items_table_view(self) -> None:
-        
+
         self.reward_items_table_view_model.clear()
         self.reward_items_table_view_model.setHorizontalHeaderLabels(
-            ["ID", "Name", "Menge", "Metadaten", "Nur einmal droppbar"]
+            ["Name", "Menge", "Metadaten", "Nur einmal droppbar", "ID"]
         )
         header = self.reward_items_table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)  # pyright: ignore[reportAttributeAccessIssue]
@@ -161,11 +165,11 @@ class ItemEditorPanel(QWidget):
 
         for reward_item in items:
             row = [
-                QStandardItem(str(reward_item.id)),
                 QStandardItem(reward_item.name),
                 QStandardItem(str(reward_item.amount)),
                 QStandardItem(reward_item.meta or ""),
                 QStandardItem("Ja" if reward_item.unique_once else "Nein"),
+                QStandardItem(str(reward_item.id)),
             ]
             for item in row:
                 item.setEditable(False)
@@ -174,13 +178,15 @@ class ItemEditorPanel(QWidget):
     # -----------------------------------------------------------------
     # Code for data relevant actions of visual widgets on right side
     # -----------------------------------------------------------------
+    
+    # ! TODO implement later requires data of groups and container relations
 
     # -----------------------------------------------------------------
     # Slots for this widget's left side
     # -----------------------------------------------------------------
 
     def on_new_reward_item_button_clicked(self) -> None:
-        
+
         dialog = RewardItemDialog()
         new_item = dialog.get_data()
         if not new_item:

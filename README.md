@@ -31,6 +31,17 @@ wows-container-log
 └─ tests
 ```
 
+## Planned features
+
+### Item-Editor
+
+- Rechts im ItemEditorPanel TreeView-Bereich für Item-Verwendungen implementieren.
+- QTreeView + QStandardItemModel einführen mit Spalten z.B. „Ort“ und „Detail“.
+- Datenmodell für Verwendungen definieren (z.B. Container → Slot → Drop-Regel, die das Item nutzt).
+- Repo-Funktionen ergänzen, um alle Verwendungen eines RewardItem per item_id abzufragen.
+- Methode reload_item_usages(item_id: str) im Panel implementieren, die TreeView aus den Repo-Daten aufbaut.
+- Linke Auswahl (Items-Tabelle) so anbinden, dass bei Selection-Change automatisch reload_item_usages(item_id) aufgerufen wird.
+
 ## Thanks to
 
 ![Qt for Python](https://doc.qt.io/qtforpython-6/_static/qtforpython.png) <https://doc.qt.io/qtforpython-6/index.html>
