@@ -32,3 +32,17 @@ def is_group_unique_by_id(group_id: str) -> bool:
             return False
 
     return True
+
+def update_group_by_reward_group(group: RewardGroup) -> RewardGroup:
+    with get_container_session() as session:
+        existing = session.get(RewardGroup, group.id)
+        if existing is None:
+            raise ValueError(f"RewardGroup '{group.id}' existiert nicht.")
+        
+        existing.id = group.id
+        existing.name = group.name
+
+        session.add(existing)
+        session.commit()
+        session.refresh(existing)
+        return existing

@@ -150,11 +150,11 @@ class GroupEditorPanel(QWidget):
 
 
     # -----------------------------------------------------------------
-    # Code for data relevant actions of visual widgets on right side
+    # Code for data relevant actions of visual widgets on right side 
     # -----------------------------------------------------------------
 
     # -----------------------------------------------------------------
-    # Slots for this widget's left side
+    # Slots for this widget's left side (alphabetically ordered)
     # -----------------------------------------------------------------
 
     def on_edit_reward_group_button_clicked(self) -> None:
@@ -165,9 +165,17 @@ class GroupEditorPanel(QWidget):
         row = selection.row()
         group_id_index = self.reward_groups_table_view_model.index(row, 1)
         group_id = group_id_index.data()
+
         print(group_id)
 
-        return
+        dialog = RewardGroupDialog(self, group_id=group_id)
+        edited_group = dialog.get_data()
+        if not edited_group:
+            return
+        
+        group_repo.update_group_by_reward_group(edited_group)
+
+        self.reload_reward_groups_table_view()
 
     def on_new_reward_group_button_clicked(self) -> None:
         

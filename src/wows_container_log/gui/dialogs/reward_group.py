@@ -28,7 +28,7 @@ class RewardGroupDialog(QDialog):
         else:
             self.setWindowTitle("Gruppe bearbeiten")
             self.set_edit_mode(True)
-            # TODO Widgets mit Daten befüllen
+            self._load_data_into_form(group_id)
 
     def _load_data_into_form(self, group_id: str) -> None:
         loaded_group = group_repo.get_group_by_id(group_id)
