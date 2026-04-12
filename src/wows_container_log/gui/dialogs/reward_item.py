@@ -106,6 +106,7 @@ class RewardItemDialog(QDialog):
         )
 
     def set_data(self, item_id: str, edit_mode: bool = True) -> None:
+
         if not item_id:
             return
 

@@ -2,15 +2,15 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QHeaderView,
-    QMessageBox,
-    QTreeView,
-    QWidget,
-    QVBoxLayout,
     QHBoxLayout,
-    QSplitter,
     QLabel,
-    QTableView,
+    QMessageBox,
     QPushButton,
+    QSplitter,
+    QTableView,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
 )
 
 from wows_container_log.gui.dialogs.reward_item import RewardItemDialog
@@ -66,7 +66,6 @@ class ItemEditorPanel(QWidget):
 
         self.reward_items_table_view = QTableView(widget)
         self.reward_items_table_view_model = QStandardItemModel(self)
-
         self.reward_items_table_view_model.setHorizontalHeaderLabels(
             ["Name", "Menge", "Metadaten", "Nur einmal droppbar", "ID"]
         )
@@ -178,7 +177,7 @@ class ItemEditorPanel(QWidget):
     # -----------------------------------------------------------------
     # Code for data relevant actions of visual widgets on right side
     # -----------------------------------------------------------------
-    
+
     # ! TODO implement later requires data of groups and container relations
 
     # -----------------------------------------------------------------
@@ -208,7 +207,7 @@ class ItemEditorPanel(QWidget):
         selection = self.reward_items_table_view.selectionModel().currentIndex()
         if not selection.isValid():
             return
-
+        # TODO Fix correct index column at next refacctor
         row = selection.row()
         item_id_index = self.reward_items_table_view_model.index(row, 0)
         item_id = item_id_index.data()
