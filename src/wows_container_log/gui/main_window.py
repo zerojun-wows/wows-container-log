@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QTabWidget
 
+from wows_container_log.gui.panels.group_editor_panel import GroupEditorPanel
 from wows_container_log.gui.panels.item_editor_panel import ItemEditorPanel
 from wows_container_log import versioning
 from wows_container_log.storage import databases
@@ -21,6 +22,7 @@ class MainWindow(QMainWindow):
         self.main_tab_widget = QTabWidget()
         self.main_tab_widget.setTabPosition(QTabWidget.TabPosition.West)
 
+        self.main_tab_widget.addTab(GroupEditorPanel(), "Gruppen-Editor")
         self.main_tab_widget.addTab(ItemEditorPanel(), "Item-Editor")
 
         self.setCentralWidget(self.main_tab_widget)
