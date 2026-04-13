@@ -1,15 +1,18 @@
-from ast import Return
-from typing import Self
-
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QMessageBox, QVBoxLayout
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QLineEdit,
+    QMessageBox,
+    QVBoxLayout,
+)
 
 from wows_container_log.models.container import RewardGroup
 from wows_container_log.storage import group_repo
 
 
 class RewardGroupDialog(QDialog):
-
     def __init__(self, parent=None, group_id=None) -> None:
 
         super().__init__(parent)
@@ -19,7 +22,7 @@ class RewardGroupDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addLayout(self._create_form_layout())
         layout.addWidget(self._create_dialog_button_box())
-        
+
         self.setFixedHeight(112)
         self.setMinimumWidth(400)
 
@@ -37,11 +40,10 @@ class RewardGroupDialog(QDialog):
             self.group_id_line_edit.setText(loaded_group.id)
             self.group_name_line_edit.setText(loaded_group.name)
 
-        
     # ----------------------------------------------------------------
     # Creation of dialog widgets
     # ----------------------------------------------------------------
-    
+
     def _create_form_layout(self) -> QFormLayout:
 
         self.group_id_line_edit = self._create_line_edit_widgets()
@@ -58,11 +60,13 @@ class RewardGroupDialog(QDialog):
     def _create_line_edit_widgets(self) -> QLineEdit:
         widget = QLineEdit(self)
         widget.setPlaceholderText("Bitte ausfüllen!")
-        widget.editingFinished.connect(self.on_group_id_line_edit_or_group_name_line_edit_finished)
+        widget.editingFinished.connect(
+            self.on_group_id_line_edit_or_group_name_line_edit_finished
+        )
         return widget
 
     def _create_dialog_button_box(self) -> QDialogButtonBox:
-        
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel,  # pyright: ignore[reportAttributeAccessIssue]
             Qt.Horizontal,  # pyright: ignore[reportAttributeAccessIssue]
@@ -78,16 +82,16 @@ class RewardGroupDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         return buttons
-    
+
     # ----------------------------------------------------------------
     # Data related functions
     # ----------------------------------------------------------------
-    
+
     def get_data(self) -> RewardGroup | None:
 
         if self.exec() != QDialog.Accepted:  # pyright: ignore[reportAttributeAccessIssue]
             return None
-       
+
         self.group_id = self.group_id_line_edit.text().strip()
         self.group_name = self.group_name_line_edit.text().strip()
 
@@ -117,9 +121,9 @@ class RewardGroupDialog(QDialog):
         return True
 
     def _is_group_id_unique(self) -> bool:
-            return group_repo.is_group_unique_by_id(self.group_id)
-    
-    def set_edit_mode(self,value: bool) -> None:
+        return group_repo.is_group_unique_by_id(self.group_id)
+
+    def set_edit_mode(self, value: bool) -> None:
         if value:
             self.edit_mode = value
             self.group_id_line_edit.setReadOnly(value)
@@ -127,15 +131,16 @@ class RewardGroupDialog(QDialog):
             self.edit_mode = False
             self.group_id_line_edit.setReadOnly(False)
 
-
-
     # -----------------------------------------------------------------
     # Slots of this dialog
     # -----------------------------------------------------------------
 
     def on_group_id_line_edit_or_group_name_line_edit_finished(self) -> None:
-        if self.group_id_line_edit.text().strip() and self.group_name_line_edit.text().strip():
+        if (
+            self.group_id_line_edit.text().strip()
+            and self.group_name_line_edit.text().strip()
+        ):
             self.ok_button.setEnabled(True)
             self.ok_button.setFocus()
         else:
-            self.ok_button.setEnabled(False)    
+            self.ok_button.setEnabled(False)

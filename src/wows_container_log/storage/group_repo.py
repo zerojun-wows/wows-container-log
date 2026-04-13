@@ -4,6 +4,7 @@ from typing import List
 from wows_container_log.models.container import RewardGroup
 from wows_container_log.storage.databases import get_container_session
 
+
 def create_group_by_reward_group(new_group: RewardGroup) -> RewardGroup:
     with get_container_session() as session:
         existing = session.get(RewardGroup, new_group.id)
@@ -16,14 +17,26 @@ def create_group_by_reward_group(new_group: RewardGroup) -> RewardGroup:
         return new_group
 
 
+def delete_group_by_id(group_id: str) -> None:
+    with get_container_session() as session:
+        existing = session.get(RewardGroup, group_id)
+        if existing is None:
+            raise ValueError(f"RewardGroup '{group_id}' existiert nicht.")
+
+        session.delete(existing)
+        session.commit()
+
+
 def get_all_groups() -> List[RewardGroup]:
     with get_container_session() as session:
         statement = select(RewardGroup).order_by(RewardGroup.name)
         return list(session.exec(statement))
 
+
 def get_group_by_id(group_id: str) -> RewardGroup | None:
     with get_container_session() as session:
         return session.get(RewardGroup, group_id)
+
 
 def is_group_unique_by_id(group_id: str) -> bool:
     with get_container_session() as session:
@@ -33,12 +46,13 @@ def is_group_unique_by_id(group_id: str) -> bool:
 
     return True
 
+
 def update_group_by_reward_group(group: RewardGroup) -> RewardGroup:
     with get_container_session() as session:
         existing = session.get(RewardGroup, group.id)
         if existing is None:
             raise ValueError(f"RewardGroup '{group.id}' existiert nicht.")
-        
+
         existing.id = group.id
         existing.name = group.name
 
