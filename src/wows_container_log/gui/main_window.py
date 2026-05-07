@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
 
         self._create_main_tab_widget()
 
-    def _create_main_tab_widget(self):
+    def _create_main_tab_widget(self) -> None:
         self.main_tab_widget = QTabWidget()
         self.main_tab_widget.setTabPosition(QTabWidget.TabPosition.West)
 

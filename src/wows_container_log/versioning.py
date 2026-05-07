@@ -4,16 +4,36 @@ Version utilities for Python projects.
 This module provides functions to retrieve the current version of a project,
 prioritizing installed package metadata and falling back to local pyproject.toml.
 
-Public functions:
-    - read_version_from_pyproject() -> str: Extracts version directly from local pyproject.toml.
-    - get_version(distribution_name: str) -> str: Gets version from installed distribution or pyproject.toml.
+Functions
+---------
+read_version_from_pyproject()
+    Extract the version directly from a local pyproject.toml file.
+get_version(distribution_name)
+    Get the version from the installed distribution or pyproject.toml.
 
-Example usage:
-    >>> from version_utils import get_version
-    >>> print(get_version("myproject"))  # Returns "1.2.3" or "0.0.0"
+Notes
+-----
+The version is obtained in the following order:
 
-Author: zerojun
-Version: 1.0
+1. Try to read the version from the installed distribution metadata.
+2. If the distribution is not installed (e.g., during development),
+   fall back to the version specified in ``pyproject.toml``.
+3. If both methods fail, a default version is returned by
+   :func:`read_version_from_pyproject`.
+
+Examples
+--------
+>>> from version_utils import get_version
+>>> get_version("myproject")  # doctest: +SKIP
+'1.2.3'
+
+Author
+------
+zerojun
+
+Version
+-------
+1.0
 """
 
 from importlib.metadata import version as pkg_version, PackageNotFoundError
@@ -25,8 +45,10 @@ def read_version_from_pyproject() -> str:
     """
     Read the project version from the local pyproject.toml file.
 
-    :return: Version string from pyproject.toml, or "0.0.0" if unavailable.
-    :rtype: str
+    Returns
+    -------
+    str
+        Version string from pyproject.toml, or "0.0.0" if unavailable.
     """
     pyproject_path = Path(__file__).parent / "pyproject.toml"
     try:
@@ -43,10 +65,15 @@ def get_version(distribution_name: str) -> str:
     If the project is installed, use importlib.metadata.
     During development, fall back to the version in pyproject.toml.
 
-    :param distribution_name: Name of the installed distribution.
-    :type distribution_name: str
-    :return: Current version string.
-    :rtype: str
+    Parameters
+    ----------
+    distribution_name: str
+        Name of the installed distribution.
+
+    Returns
+    -------
+    str
+        Current version string.
     """
     try:
         return pkg_version(distribution_name)
