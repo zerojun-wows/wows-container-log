@@ -33,6 +33,16 @@ def get_all_groups() -> List[RewardGroup]:
         return list(session.exec(statement))
 
 
+def get_all_groups_without_given_id(group_id: str) -> List[RewardGroup] | None:
+    with get_container_session() as session:
+        statement = (
+            select(RewardGroup)
+            .where(RewardGroup.id != group_id)
+            .order_by(RewardGroup.name)
+        )
+        return list(session.exec(statement))
+
+
 def get_group_by_id(group_id: str) -> RewardGroup | None:
     with get_container_session() as session:
         return session.get(RewardGroup, group_id)
