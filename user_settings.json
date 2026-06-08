@@ -36,6 +36,7 @@
     // Editor settings
     "ruff.importStrategy": "useBundled",
     "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnType": false,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
