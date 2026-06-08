@@ -60,9 +60,9 @@ class GroupEditorPanel(QWidget):
         self.reload_reward_groups_table_view()
         self.reload_reward_entries_tree_view()
 
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # Creation code for left side of this widget
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
 
     def _create_reward_groups_left_widget(self, splitter: QSplitter) -> QWidget:
 
@@ -124,9 +124,9 @@ class GroupEditorPanel(QWidget):
             self.on_delete_reward_group_button_clicked
         )
 
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # Creation code for right side of this widget
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
 
     def _create_reward_entries_of_group_right_widget(
         self, splitter: QSplitter
@@ -165,14 +165,19 @@ class GroupEditorPanel(QWidget):
         self.new_reward_entry_button.clicked.connect(
             self.on_new_reward_entry_button_clicked
         )
+        self.edit_reward_entry_button = QPushButton("Bearbeiten")
+        self.edit_reward_entry_button.clicked.connect(
+            self.on_edit_reward_entry_button_clicked
+        )
         button_row.addWidget(self.new_reward_entry_button)
+        button_row.addWidget(self.edit_reward_entry_button)
         button_row.addStretch()
 
         return button_row
 
-    # -----------------------------------------------------------------
-    # Code for data relevant actions of visual widgets on left side
-    # -----------------------------------------------------------------
+        # ────────────────────────────────────────────────────────────
+        # Code for data relevant actions of visual widgets on left side
+        # ────────────────────────────────────────────────────────────
 
     def get_selected_group_id_in_rewards_table_view(self) -> str | None:
         selection = self.reward_groups_table_view.selectionModel().currentIndex()
@@ -221,9 +226,9 @@ class GroupEditorPanel(QWidget):
 
             self.reward_groups_table_view_model.appendRow(row)
 
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
     # Code for data relevant actions of visual widgets on right side
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
 
     def reload_reward_entries_tree_view(self) -> None:
         self.reward_entries_tree_view_model.clear()
@@ -309,7 +314,7 @@ class GroupEditorPanel(QWidget):
 
     def _append_entry_row_to_parent_item(
         self, entry: RewardEntry, parent_item: QStandardItem
-    ) -> QStandardItem:
+    ) -> List[QStandardItem]:
         name = self._get_ref_name_for_entry(entry.kind, entry.ref_id)
 
         entry_row = self._build_single_row_for_reward_entries_tree_view(
@@ -384,9 +389,24 @@ class GroupEditorPanel(QWidget):
         if item_data is not None and item_data.meta is not None:
             return item_data.meta
 
-    # -----------------------------------------------------------------
+    def _get_selected_reward_entry_id_in_tree_view(self) -> int | None:
+        index = self.reward_entries_tree_view.selectionModel().currentIndex()
+        if not index.isValid():
+            return None
+
+        # Immer die erste Spalte der Zeile nehmen
+        first_column_index = index.sibling(index.row(), 0)
+        item = self.reward_entries_tree_view_model.itemFromIndex(first_column_index)
+        if item is None:
+            return None
+
+        entry_id = item.data(Qt.UserRole)  # pyright: ignore[reportAttributeAccessIssue]
+
+        return None if entry_id is None else int(entry_id)
+
+    # ────────────────────────────────────────────────────────────────
     # Slots for this widget's left side (alphabetically ordered)
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
 
     def on_delete_reward_group_button_clicked(self) -> None:
 
@@ -446,12 +466,49 @@ class GroupEditorPanel(QWidget):
         # for right widget
         self.reload_reward_entries_tree_view()
 
-    # -----------------------------------------------------------------
-    # Slots for this widget's right side
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
+    # Slots for this widget's right side (alphabetically ordered)
+    # ────────────────────────────────────────────────────────────────
 
+    def on_edit_reward_entry_button_clicked(self) -> None:
+        # Ermitteln welcher Eintrag ausgewählt ist:
+        selection = self._get_selected_reward_entry_id_in_tree_view()
+        if selection is None:
+            return
+
+        entry = entry_repo.get_entry_by_id(selection)
+        if entry is None:
+            QMessageBox.warning(self, "Fehler", "Der ausgewählte Eintrag konnte nicht geladen werden.")
+            return
+        
+        # parent_group_id aus dem Eintrag, falls du später Gruppenwechsel erlauben willst
+        parent_group_id = entry.group_id
+
+        dialog = RewardEntryDialog(parent_group_id=parent_group_id, entry=entry)
+        updated_entry = dialog.get_data()
+
+        if not updated_entry:
+            return
+
+        try:
+            # Du brauchst im Repo noch eine passende Update-Funktion, z.B.:
+            # entry_repo.update_entry_by_reward_entry(updated_entry)
+            entry_repo.update_entry_by_reward_entry(updated_entry)
+        except CyclicGroupError as exc:
+            QMessageBox.warning(self, "Ungültige Gruppen-Zuordnung", str(exc))
+            return
+        except DuplicateGroupChildError as exc:
+            QMessageBox.warning(self, "Doppelte Untergruppe", str(exc))
+            return
+        except DuplicateItemChildError as exc:
+            QMessageBox.warning(self, "Doppelter Gegenstand", str(exc))
+            return
+
+        self.reload_reward_entries_tree_view()
+        
+        
     def on_new_reward_entry_button_clicked(self) -> None:
-        # sourcery skip: reintroduce-else, swap-if-else-branches, use-named-expression
+
         parent_group_id = self.get_selected_group_id_in_rewards_table_view()
         if parent_group_id is None:
             return
@@ -464,6 +521,7 @@ class GroupEditorPanel(QWidget):
 
         try:
             entry_repo.create_entry_by_reward_entry(new_entry)
+
         except CyclicGroupError as exc:
             QMessageBox.warning(
                 self,

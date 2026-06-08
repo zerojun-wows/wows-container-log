@@ -50,6 +50,13 @@ def get_all_entries_by_group_id(group_id: str) -> List[RewardEntry] | None:
         return list(session.exec(statement))
 
 
+def get_entry_by_id(entry_id: int) -> RewardEntry | None:
+    with get_container_session() as session:
+        statement = select(RewardEntry).where(RewardEntry.id == entry_id)
+        return session.exec(statement).first()
+
+
+
 def has_group_child(parent_group_id: str, child_group_id: str) -> bool:
     """
     Prüft, ob es bereits einen RewardEntry mit kind='group' gibt,
@@ -89,6 +96,31 @@ def resolve_entry_name_by_kind_and_ref_id(kind: str, ref_id) -> str | None:
     elif kind == "item":
         if item_name := item_repo.get_item_by_id(ref_id):
             return item_name.name
+
+
+def update_entry_by_reward_entry(updated_entry: RewardEntry) -> RewardEntry:
+
+    if updated_entry.id is None:
+        raise ValueError(
+            "update_entry_by_reward_entry erwartet einen Eintrag mit gesetzter id."
+        )
+
+    with get_container_session() as session:
+        db_entry = session.get(RewardEntry, updated_entry.id)
+        if db_entry is None:
+            raise ValueError(f"RewardEntry mit id={updated_entry.id} existiert nicht.")
+
+        db_entry.group_id = updated_entry.group_id
+        db_entry.entry_key = updated_entry.entry_key
+        db_entry.kind = updated_entry.kind
+        db_entry.ref_id = updated_entry.ref_id
+        db_entry.amount = updated_entry.amount
+        db_entry.probability = updated_entry.probability
+
+        session.add(db_entry)
+        session.commit()
+        session.refresh(db_entry)
+        return db_entry
 
 
 def would_create_cycle(parent_group_id: str, child_group_id: str) -> bool:

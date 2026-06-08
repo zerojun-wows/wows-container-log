@@ -17,7 +17,7 @@ from wows_container_log.storage import group_repo, item_repo, entry_repo
 
 
 class RewardEntryDialog(QDialog):
-    def __init__(self, parent_group_id: str, parent=None, entry_id=None) -> None:
+    def __init__(self, parent_group_id: str, parent=None, entry: RewardEntry|None =None) -> None:
 
         super().__init__(parent)
 
@@ -31,16 +31,19 @@ class RewardEntryDialog(QDialog):
         # self.setFixedHeight(272)
         self.setMinimumWidth(400)
 
-        if entry_id is None:
+        if entry is None:
             self.setWindowTitle("Neue Belohnungsposition anlegen")
         else:
             self.setWindowTitle("Belohnungsposition bearbeiten")
 
         self._load_parent_data_for_reward_entry_group_label()
 
-    # ----------------------------------------------------------------
+        if entry is not None:
+            self._populate_form_from_entry(entry)
+
+    # ────────────────────────────────────────────────────────────────
     # Creation of dialog widgets
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
 
     def _create_form_layout(self) -> QFormLayout:
 
@@ -148,9 +151,10 @@ class RewardEntryDialog(QDialog):
 
         return buttons
 
-    # ----------------------------------------------------------------
+
+    # ────────────────────────────────────────────────────────────────────
     # Data related functions
-    # ----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────────
 
     def get_data(self) -> RewardEntry | None:
         if self.exec() != QDialog.Accepted:  # pyright: ignore[reportAttributeAccessIssue]
@@ -282,9 +286,54 @@ class RewardEntryDialog(QDialog):
 
         return True
 
-    # -----------------------------------------------------------------
+    def _populate_form_from_entry(self, entry: RewardEntry) -> None:
+        # ID anzeigen (read-only Label hast du schon)
+        if entry.id is not None:
+            self.reward_entry_id_label.setText(str(entry.id))
+
+        # Eintragsschlüssel
+        if entry.entry_key:
+            self.reward_entry_key_line_edit.setText(entry.entry_key)
+
+        self._set_reward_entry_item_kind_combo_box_selected_item(entry)
+
+        self._set_reward_entry_ref_id_combo_box_selected_item(entry)
+
+        # amount
+        self.reward_entry_amount_spin_box.setValue(entry.amount or 0)
+
+        # probability (du speicherst z.B. "12.34 %" als String)
+        if entry.probability:
+            prob_str = entry.probability.replace("%", "").strip()
+            try:
+                prob_value = float(prob_str)
+            except ValueError:
+                prob_value = 0.0
+            self.reward_entry_probability_double_spin_box.setValue(prob_value)
+
+        # OK-Button nach dem Füllen direkt validieren
+        self._validate_conditions_to_enable_ok_button()
+
+    def _set_reward_entry_item_kind_combo_box_selected_item(self, entry: RewardEntry) -> None:
+        # Eintragsart (kind) setzen
+        kind_index = self.reward_entry_kind_combo_box.findData(entry.kind)
+        if kind_index >= 0:
+            # Triggert auch den Slot und lädt die passende ComboBox-Liste
+            self.reward_entry_kind_combo_box.setCurrentIndex(kind_index)
+
+    def _set_reward_entry_ref_id_combo_box_selected_item(self, entry: RewardEntry) -> None:
+        # ref_id in der entsprechenden ComboBox setzen
+        # (nachdem die Liste durch den Slot geladen wurde)
+        if entry.ref_id is not None:
+            ref_index = self.reward_entry_ref_id_combo_box.findData(entry.ref_id)
+            if ref_index >= 0:
+                self.reward_entry_ref_id_combo_box.setCurrentIndex(ref_index)
+
+
+
+    # ────────────────────────────────────────────────────────────────
     # Slots of this dialog
-    # -----------------------------------------------------------------
+    # ────────────────────────────────────────────────────────────────
 
     def on_reward_entry_amount_spin_box_editing_finished(self) -> None:
         self._validate_conditions_to_enable_ok_button()
